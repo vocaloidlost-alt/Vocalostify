@@ -1752,7 +1752,7 @@ async function syncManifestTracks() {
           album: entry.album || '',
           albumId: null,
           coverBlob: null,
-          coverUrl: entry.cover || null,
+          coverUrl: entry.cover ? (entry.cover + (entry.v ? `?v=${entry.v}` : '')) : null,
           fileBlob: null,
           fileUrl: entry.file,
           fileType: '',
@@ -1986,10 +1986,12 @@ async function uploadTrackToGithub() {
 }
 
 // songs/xxx.mp3 のような相対パスを、manifest形式のURL・GitHub raw URLの両方から取り出す
+// (キャッシュ回避用の ?v=... が付いている場合は取り除く)
 function ghPathFromTrackUrl(url) {
   if (!url) return null;
-  const idx = url.indexOf('songs/');
-  return idx > -1 ? url.slice(idx) : null;
+  const clean = url.split('?')[0];
+  const idx = clean.indexOf('songs/');
+  return idx > -1 ? clean.slice(idx) : null;
 }
 // 既にGitHub上で公開済みの曲(id: manifest:... または ghfolder:...)の
 // タイトル/アーティスト/アルバム名/ジャケット画像を編集した際に、manifest.json側にも反映する。
@@ -2024,7 +2026,13 @@ async function pushTrackEditToGithub(track, updates, coverFile) {
     manifest.tracks[idx].title = updates.title;
     manifest.tracks[idx].artist = updates.artist;
     manifest.tracks[idx].album = updates.album || '';
-    if (coverFile) manifest.tracks[idx].cover = coverPath;
+    if (coverFile) {
+      manifest.tracks[idx].cover = coverPath;
+      // 同名ファイルを上書きした場合、GitHub Pages側のキャッシュにより
+      // しばらく古い画像が表示され続けることがあるため、バージョン番号を
+      // 進めてURLを変え、キャッシュを回避する
+      manifest.tracks[idx].v = (manifest.tracks[idx].v || 0) + 1;
+    }
   } else {
     // まだmanifest.jsonに載っていない(自動フォルダ検出で表示されていただけの)曲を、
     // ここで正式にmanifest.jsonへ登録する
