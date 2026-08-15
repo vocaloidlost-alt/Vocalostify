@@ -1759,7 +1759,7 @@ async function syncManifestTracks() {
           fileName: entry.file.split('/').pop(),
           duration,
           favorite: existing ? existing.favorite : false,
-          lyrics: existing ? existing.lyrics : '',
+          lyrics: (typeof entry.lyrics === 'string') ? entry.lyrics : (existing ? existing.lyrics : ''),
           dateAdded: existing ? existing.dateAdded : (entry.dateAdded || Date.now()),
         };
         await dbPut('tracks', track);
@@ -1899,6 +1899,16 @@ async function ghPutFile(info, path, base64Content, message, sha) {
     body: JSON.stringify(body),
   });
 }
+// ファイルを削除する(存在しない場合は何もしない)
+async function ghDeleteFile(info, path, message) {
+  const sha = await ghGetSha(info, path);
+  if (!sha) return;
+  await ghApi(info, `contents/${path.split('/').map(encodeURIComponent).join('/')}`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ message, sha }),
+  });
+}
 function setGhStatus(msg) { const el = document.getElementById('ghUploadStatus'); if (el) el.textContent = msg || ''; }
 
 async function uploadTrackToGithub() {
@@ -1982,11 +1992,85 @@ function ghPathFromTrackUrl(url) {
   return idx > -1 ? url.slice(idx) : null;
 }
 // 既にGitHub上で公開済みの曲(id: manifest:... または ghfolder:...)の
-// タイトル/アーティスト/アルバム名を編集した際に、manifest.json側にも反映する。
+// タイトル/アーティスト/アルバム名/ジャケット画像を編集した際に、manifest.json側にも反映する。
 // これをしないと、次回サイトを開いた時にmanifest.jsonの内容で上書きされ、
 // 編集内容が元に戻ってしまう。
+// coverFile を渡すと、新しいジャケット画像もGitHubにアップロードして差し替える。
 // 戻り値: { ok: true } | { ok: false, reason: 'no-repo' | 'no-token' | 'not-found', error? }
-async function pushTrackEditToGithub(track, updates) {
+async function pushTrackEditToGithub(track, updates, coverFile) {
+  const info = detectGithubRepoInfo();
+  if (!info) return { ok: false, reason: 'no-repo' };
+  if (!getGhToken()) return { ok: false, reason: 'no-token' };
+
+  const path = track.fileName ? `songs/${track.fileName}` : ghPathFromTrackUrl(track.fileUrl);
+  if (!path) return { ok: false, reason: 'not-found' };
+  let coverPath = ghPathFromTrackUrl(track.coverUrl) || '';
+
+  if (coverFile) {
+    const audioBase = path.replace(/\.[^./]+$/, '');
+    const coverExt = coverFile.name.includes('.') ? coverFile.name.split('.').pop().toLowerCase() : 'jpg';
+    const newCoverPath = `${audioBase}.${coverExt}`;
+    const coverB64 = await fileToBase64(coverFile);
+    const existingCoverSha = await ghGetSha(info, newCoverPath);
+    await ghPutFile(info, newCoverPath, coverB64, `ジャケットを更新: ${updates.title}`, existingCoverSha);
+    coverPath = newCoverPath;
+  }
+
+  const manifestData = await ghApi(info, `contents/${MANIFEST_URL.split('/').map(encodeURIComponent).join('/')}`);
+  const manifest = JSON.parse(base64ToUtf8(manifestData.content));
+  if (!Array.isArray(manifest.tracks)) manifest.tracks = [];
+  const idx = manifest.tracks.findIndex(e => e && e.file === path);
+  if (idx > -1) {
+    manifest.tracks[idx].title = updates.title;
+    manifest.tracks[idx].artist = updates.artist;
+    manifest.tracks[idx].album = updates.album || '';
+    if (coverFile) manifest.tracks[idx].cover = coverPath;
+  } else {
+    // まだmanifest.jsonに載っていない(自動フォルダ検出で表示されていただけの)曲を、
+    // ここで正式にmanifest.jsonへ登録する
+    manifest.tracks.push({
+      title: updates.title, artist: updates.artist, album: updates.album || '',
+      file: path, cover: coverPath, duration: Math.round(track.duration) || 0,
+    });
+  }
+  const newManifestB64 = utf8ToBase64(JSON.stringify(manifest, null, 2));
+  await ghPutFile(info, MANIFEST_URL, newManifestB64, `曲情報を更新: ${updates.title}`, manifestData.sha);
+  return { ok: true, path, coverPath };
+}
+
+// 公開済みの曲(id: manifest:... または ghfolder:...)をライブラリから削除する際に、
+// manifest.jsonのエントリと、songs/内の実ファイル(音源・ジャケット)もGitHub上から削除する。
+// 実ファイルを消さないと、自動フォルダ検出の仕組みで再び曲一覧に復活してしまう。
+// 戻り値: { ok: true } | { ok: false, reason: 'no-repo' | 'no-token' | 'not-found', error? }
+async function deleteTrackFromGithub(track) {
+  const info = detectGithubRepoInfo();
+  if (!info) return { ok: false, reason: 'no-repo' };
+  if (!getGhToken()) return { ok: false, reason: 'no-token' };
+
+  const path = track.fileName ? `songs/${track.fileName}` : ghPathFromTrackUrl(track.fileUrl);
+  if (!path) return { ok: false, reason: 'not-found' };
+  const coverPath = ghPathFromTrackUrl(track.coverUrl);
+
+  const manifestData = await ghApi(info, `contents/${MANIFEST_URL.split('/').map(encodeURIComponent).join('/')}`);
+  const manifest = JSON.parse(base64ToUtf8(manifestData.content));
+  if (Array.isArray(manifest.tracks)) {
+    const before = manifest.tracks.length;
+    manifest.tracks = manifest.tracks.filter(e => !(e && e.file === path));
+    if (manifest.tracks.length !== before) {
+      const newManifestB64 = utf8ToBase64(JSON.stringify(manifest, null, 2));
+      await ghPutFile(info, MANIFEST_URL, newManifestB64, `曲を削除: ${track.title}`, manifestData.sha);
+    }
+  }
+  await ghDeleteFile(info, path, `音源を削除: ${track.title}`);
+  if (coverPath) await ghDeleteFile(info, coverPath, `ジャケットを削除: ${track.title}`);
+  return { ok: true };
+}
+
+// 歌詞(本文+タイミングタグ)をmanifest.jsonに保存し、どの端末で見ても同じ歌詞が
+// 表示されるようにする。まだmanifest.jsonに載っていない(自動フォルダ検出のみの)
+// 曲の場合は、現在のタイトル/アーティスト情報も含めて新規エントリとして登録する。
+// 戻り値: { ok: true, path } | { ok: false, reason: 'no-repo' | 'no-token' | 'not-found', error? }
+async function pushLyricsToGithub(track, lyricsText) {
   const info = detectGithubRepoInfo();
   if (!info) return { ok: false, reason: 'no-repo' };
   if (!getGhToken()) return { ok: false, reason: 'no-token' };
@@ -2000,19 +2084,16 @@ async function pushTrackEditToGithub(track, updates) {
   if (!Array.isArray(manifest.tracks)) manifest.tracks = [];
   const idx = manifest.tracks.findIndex(e => e && e.file === path);
   if (idx > -1) {
-    manifest.tracks[idx].title = updates.title;
-    manifest.tracks[idx].artist = updates.artist;
-    manifest.tracks[idx].album = updates.album || '';
+    manifest.tracks[idx].lyrics = lyricsText;
   } else {
-    // まだmanifest.jsonに載っていない(自動フォルダ検出で表示されていただけの)曲を、
-    // ここで正式にmanifest.jsonへ登録する
     manifest.tracks.push({
-      title: updates.title, artist: updates.artist, album: updates.album || '',
+      title: track.title, artist: track.artist, album: track.album || '',
       file: path, cover: coverPath, duration: Math.round(track.duration) || 0,
+      lyrics: lyricsText,
     });
   }
   const newManifestB64 = utf8ToBase64(JSON.stringify(manifest, null, 2));
-  await ghPutFile(info, MANIFEST_URL, newManifestB64, `曲情報を更新: ${updates.title}`, manifestData.sha);
+  await ghPutFile(info, MANIFEST_URL, newManifestB64, `歌詞を更新: ${track.title}`, manifestData.sha);
   return { ok: true, path };
 }
 
@@ -2097,6 +2178,14 @@ function loadAndPlay(trackId) {
   const track = getTrack(trackId);
   if (!track) return;
   state.currentTrackId = trackId;
+  // 曲の切り替え時、前の曲の再生をきちんと止めてから次の曲を読み込む。
+  // pause()せずにsrcだけ差し替えると、ブラウザ(特にiOS Safari)が前の曲の
+  // バッファを一瞬再生し続けてしまい、「一瞬前の曲が流れてから次の曲に移る」
+  // ような挙動になることがあるため、pause + currentTime=0 + load() で
+  // 明示的に前の再生状態をリセットしてから新しいsrcを設定する。
+  audioEl.pause();
+  audioEl.removeAttribute('src');
+  audioEl.load();
   audioEl.src = fileURLFor(track);
   audioEl.currentTime = 0;
   updateMediaSessionMetadata(track);
@@ -3740,15 +3829,30 @@ function bindStaticHandlers() {
   document.getElementById('sheetEditLyrics').addEventListener('click', () => { closeSheet('trackSheet'); openEditLyrics(state.sheetTrackId); });
   document.getElementById('sheetDeleteTrack').addEventListener('click', async () => {
     const id = state.sheetTrackId;
+    const t = getTrack(id);
     closeSheet('trackSheet');
     if (!confirm('この曲をライブラリから削除しますか?')) return;
+    const isPublished = t && (id.startsWith('manifest:') || id.startsWith('ghfolder:'));
+    let msg = '削除しました';
+    if (isPublished) {
+      showToast('GitHubから削除中...');
+      try {
+        const result = await deleteTrackFromGithub(t);
+        if (result.ok) msg = 'GitHubからも削除しました';
+        else if (result.reason === 'no-token') msg = 'この端末だけ削除しました(GitHub側は未削除。「＋」→「GitHubに公開して追加」でトークンを設定すると次回から反映できます)';
+        else if (result.reason === 'no-repo') msg = 'この端末だけ削除しました(GitHub Pages以外では反映できません)';
+        else msg = 'この端末だけ削除しました(GitHub側の削除に失敗しました)';
+      } catch (err) {
+        msg = 'この端末だけ削除しました(GitHubエラー: ' + (err.message || '不明') + ')';
+      }
+    }
     await dbDelete('tracks', id);
     state.tracks = state.tracks.filter(t => t.id !== id);
     state.collections.forEach(c => { c.trackIds = c.trackIds.filter(tid => tid !== id); dbPut('collections', c); });
     state.recent = state.recent.filter(r => r.trackId !== id);
     dbPut('meta', { key: 'recent', value: state.recent });
     if (state.currentTrackId === id) { audioEl.pause(); state.currentTrackId = null; renderMiniPlayer(); }
-    showToast('削除しました');
+    showToast(msg);
     renderCurrentView();
   });
 
@@ -3798,22 +3902,24 @@ function bindStaticHandlers() {
     if (!t.albumId) {
       t.album = document.getElementById('editAlbumInput').value.trim();
     }
-    let coverNote = '';
+    const coverChanged = !t.albumId && pendingEditCoverBlob !== undefined && pendingEditCoverBlob !== null;
     if (!t.albumId && pendingEditCoverBlob !== undefined) {
       t.coverBlob = pendingEditCoverBlob;
       state.coverURLCache.delete(t.id);
       state.squareArtworkCache.delete(t.id);
-      if (isPublished) coverNote = '(ジャケットの変更はGitHub側には未反映)';
     }
 
-    let finalMsg = '曲情報を保存しました' + coverNote;
+    let finalMsg = '曲情報を保存しました';
     if (isPublished) {
       const btn = document.getElementById('editTrackConfirm');
       btn.disabled = true;
       try {
-        const result = await pushTrackEditToGithub(t, { title: t.title, artist: t.artist, album: t.album });
+        const result = await pushTrackEditToGithub(
+          t, { title: t.title, artist: t.artist, album: t.album },
+          coverChanged ? pendingEditCoverBlob : null
+        );
         if (result.ok) {
-          finalMsg = 'GitHubにも反映しました' + coverNote;
+          finalMsg = 'GitHubにも反映しました';
           // 自動フォルダ検出由来(ghfolder:)の曲が正式にmanifest.jsonへ登録されたので、
           // IDを次回同期後と同じ形式(manifest:...)に付け替えて重複表示を防ぐ
           if (t.id.startsWith('ghfolder:') && result.path) {
@@ -3868,6 +3974,7 @@ function bindStaticHandlers() {
     syncLyricsLineEditorToTextarea();
     const newLyricsText = document.getElementById('editLyricsTextarea').value;
     const prevLyrics = t.lyrics; // 保存に失敗した場合に元へ戻すため退避しておく
+    const isPublished = t.id.startsWith('manifest:') || t.id.startsWith('ghfolder:');
     const btn = document.getElementById('editLyricsConfirm');
     t.lyrics = newLyricsText;
     btn.disabled = true;
@@ -3881,10 +3988,36 @@ function bindStaticHandlers() {
       btn.disabled = false;
       return;
     }
+
+    let finalMsg = '歌詞を保存しました';
+    if (isPublished) {
+      try {
+        const result = await pushLyricsToGithub(t, newLyricsText);
+        if (result.ok) {
+          finalMsg = '歌詞をGitHubにも保存しました(どの端末でも同じ歌詞が表示されます)';
+          if (t.id.startsWith('ghfolder:') && result.path) {
+            const oldId = t.id;
+            const newId = 'manifest:' + result.path;
+            await dbDelete('tracks', oldId);
+            t.id = newId;
+            if (state.currentTrackId === oldId) state.currentTrackId = newId;
+          }
+        } else if (result.reason === 'no-token') {
+          finalMsg = 'この端末だけの歌詞です(GitHubトークン未設定。「＋」→「GitHubに公開して追加」で設定できます)';
+        } else if (result.reason === 'no-repo') {
+          finalMsg = 'この端末だけの歌詞です(GitHub Pages以外では反映できません)';
+        } else {
+          finalMsg = 'GitHubへの反映に失敗したため、この端末だけの歌詞です';
+        }
+      } catch (err) {
+        finalMsg = 'GitHubへの反映エラー: ' + (err.message || '不明なエラー');
+      }
+    }
+
     btn.disabled = false;
     closeModal('editLyricsModal');
     if (state.currentTrackId === t.id) { renderLyricsPanel(); renderLyricsFull(); }
-    showToast('歌詞を保存しました');
+    showToast(finalMsg);
   });
 
   // 歌詞タップ同期モーダル
