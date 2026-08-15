@@ -893,6 +893,10 @@ img{ -webkit-user-drag:none; user-select:none; }
       <span class="sheet-icon"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zM4 11h10v2H4zM4 16h10v2H4zM17 13v3h-3v2h3v3h2v-3h3v-2h-3v-3z"/></svg></span>
       <div><b>プレイリストを作成</b></div>
     </button>
+    <button class="sheet-item" id="addGithubItem">
+      <span class="sheet-icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.58 2 12.26c0 4.55 2.87 8.41 6.84 9.77.5.1.68-.22.68-.5v-1.75c-2.78.62-3.37-1.37-3.37-1.37-.46-1.2-1.11-1.52-1.11-1.52-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.9 1.57 2.34 1.11 2.91.85.09-.67.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.05 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.3 9.3 0 015 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.92-2.34 4.79-4.57 5.04.36.32.68.94.68 1.9v2.82c0 .28.18.6.69.5A10.02 10.02 0 0022 12.26C22 6.58 17.52 2 12 2z"/></svg></span>
+      <div><b>GitHubに公開して追加</b><br><small>音源・ジャケットをGitHubへ直接アップロードし、誰からアクセスしても聴けるようにします</small></div>
+    </button>
     <button class="sheet-item sheet-cancel" data-close-sheet>キャンセル</button>
   </div>
 </div>
@@ -991,6 +995,47 @@ img{ -webkit-user-drag:none; user-select:none; }
     <div class="modal-row">
       <button class="modal-btn secondary" data-close-modal>キャンセル</button>
       <button class="modal-btn primary" id="editTrackConfirm">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== モーダル: GitHubに公開して曲を追加 ===================== -->
+<input type="file" id="ghAudioInput" accept="audio/*,video/*,.mp3,.wav,.ogg,.flac,.m4a,.mp4" hidden>
+<input type="file" id="ghCoverInput" accept="image/*" hidden>
+<div class="modal-overlay" id="githubAddModal">
+  <div class="modal-box modal-box-lg">
+    <div class="modal-title">GitHubに公開して追加</div>
+
+    <div id="ghTokenSection">
+      <label class="modal-label">GitHubトークン</label>
+      <input type="password" id="ghTokenInput" class="modal-input" placeholder="github_pat_... または ghp_...">
+      <div class="empty-hint" style="margin:4px 0 12px;padding:0;line-height:1.6;">
+        このリポジトリへの書き込み権限(Contents: Read and write)を持つ Personal Access Token が必要です。この端末のブラウザ内だけに保存され、他人には送信されません。他の人と共有するファイルではないので、他人に見せないよう注意してください。
+      </div>
+    </div>
+    <div id="ghTokenSavedRow" class="hidden" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <span class="empty-hint" style="margin:0;padding:0;">✓ トークン設定済み</span>
+      <button class="modal-btn secondary small" id="ghTokenChangeBtn">変更</button>
+    </div>
+
+    <label class="modal-label">曲名</label>
+    <input type="text" id="ghTitleInput" class="modal-input" placeholder="例: ミルフィーユ">
+    <label class="modal-label">アーティスト（任意）</label>
+    <input type="text" id="ghArtistInput" class="modal-input" placeholder="空欄でもOK">
+
+    <label class="modal-label">音源/映像ファイル</label>
+    <button class="modal-btn secondary" id="ghAudioPickBtn" style="width:100%;text-align:left;">ファイルを選択</button>
+    <div class="empty-hint" id="ghAudioFileName" style="margin:2px 0 12px;padding:0;font-size:12.5px;"></div>
+
+    <label class="modal-label">ジャケット画像（任意）</label>
+    <button class="modal-btn secondary" id="ghCoverPickBtn" style="width:100%;text-align:left;">ファイルを選択</button>
+    <div class="empty-hint" id="ghCoverFileName" style="margin:2px 0 12px;padding:0;font-size:12.5px;"></div>
+
+    <div class="empty-hint" id="ghUploadStatus" style="margin:0 0 6px;padding:0;min-height:16px;font-size:12.5px;"></div>
+
+    <div class="modal-row">
+      <button class="modal-btn secondary" data-close-modal id="ghCancelBtn">キャンセル</button>
+      <button class="modal-btn primary" id="ghUploadConfirm">公開する</button>
     </div>
   </div>
 </div>
@@ -1788,6 +1833,148 @@ async function syncFolderTracks(manifestFiles) {
     });
   }
 }
+
+// =====================================================================
+// GitHubに直接アップロードして曲を公開する機能
+// ブラウザから GitHub Contents API を叩き、songs/ フォルダへのファイル
+// アップロードと songs/manifest.json の更新を自動で行う。
+// これにより「GitHubのサイトを開いてファイルを操作する」作業なしで、
+// プレイヤーの画面内だけで曲の公開が完結する。
+// =====================================================================
+const GH_TOKEN_KEY = 'vocalostify_gh_token';
+function getGhToken() { return localStorage.getItem(GH_TOKEN_KEY) || ''; }
+function setGhToken(v) { if (v) localStorage.setItem(GH_TOKEN_KEY, v); else localStorage.removeItem(GH_TOKEN_KEY); }
+
+// 文字列(UTF-8)をBase64に変換(日本語などマルチバイト文字対応)
+function utf8ToBase64(str) { return btoa(unescape(encodeURIComponent(str))); }
+// GitHub APIが返すBase64(改行入り)をUTF-8文字列に変換
+function base64ToUtf8(b64) { return decodeURIComponent(escape(atob(b64.replace(/\n/g, '')))); }
+// FileをBase64文字列(data:...,の後ろ部分だけ)に変換
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1] || '');
+    reader.onerror = () => reject(new Error('ファイルの読み込みに失敗しました'));
+    reader.readAsDataURL(file);
+  });
+}
+// ファイル名として使えない文字を置換する
+function sanitizeGhFilename(name) {
+  return name.replace(/[\/\\:*?"<>|]/g, '_').replace(/\s+/g, ' ').trim();
+}
+async function ghApi(info, path, options = {}) {
+  const token = getGhToken();
+  const res = await fetch(`https://api.github.com/repos/${info.owner}/${info.repo}/${path}`, {
+    ...options,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github+json',
+      ...(options.headers || {}),
+    },
+  });
+  if (!res.ok) {
+    let msg = `GitHub API エラー (${res.status})`;
+    try { const j = await res.json(); if (j && j.message) msg += `: ${j.message}`; } catch (e) {}
+    if (res.status === 401) msg = 'トークンが無効です。トークンを確認してください。';
+    if (res.status === 403) msg = 'トークンにこのリポジトリへの書き込み権限がありません(Contents: Read and write が必要です)。';
+    if (res.status === 404) msg = 'リポジトリまたはファイルが見つかりません。';
+    throw new Error(msg);
+  }
+  return res.status === 204 ? null : res.json();
+}
+// 既存ファイルのsha(更新に必要)を取得。存在しない場合はnull。
+async function ghGetSha(info, path) {
+  try {
+    const data = await ghApi(info, `contents/${path.split('/').map(encodeURIComponent).join('/')}`);
+    return data && data.sha ? data.sha : null;
+  } catch (e) { return null; }
+}
+// ファイルを作成/更新する
+async function ghPutFile(info, path, base64Content, message, sha) {
+  const body = { message, content: base64Content, branch: undefined };
+  if (sha) body.sha = sha;
+  return ghApi(info, `contents/${path.split('/').map(encodeURIComponent).join('/')}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+function setGhStatus(msg) { const el = document.getElementById('ghUploadStatus'); if (el) el.textContent = msg || ''; }
+
+async function uploadTrackToGithub() {
+  const info = detectGithubRepoInfo();
+  if (!info) { setGhStatus('この画面はGitHub Pages上で開いた場合のみ利用できます。'); return; }
+  const token = getGhToken();
+  if (!token) { setGhStatus('先にGitHubトークンを入力してください。'); return; }
+
+  const title = document.getElementById('ghTitleInput').value.trim();
+  const artist = document.getElementById('ghArtistInput').value.trim();
+  const audioFile = state.ghAudioFile;
+  const coverFile = state.ghCoverFile;
+
+  if (!title) { setGhStatus('曲名を入力してください。'); return; }
+  if (!audioFile) { setGhStatus('音源/映像ファイルを選択してください。'); return; }
+
+  const confirmBtn = document.getElementById('ghUploadConfirm');
+  confirmBtn.disabled = true;
+  try {
+    const base = sanitizeGhFilename(artist ? `${title} - ${artist}` : title);
+    const audioExt = audioFile.name.includes('.') ? audioFile.name.split('.').pop().toLowerCase() : 'mp3';
+    const audioPath = `songs/${base}.${audioExt}`;
+    let coverPath = null;
+
+    setGhStatus('音源データを読み込み中...');
+    const audioB64 = await fileToBase64(audioFile);
+    setGhStatus(`音源をアップロード中... (${audioFile.name})`);
+    const existingAudioSha = await ghGetSha(info, audioPath);
+    await ghPutFile(info, audioPath, audioB64, `曲を追加: ${title}`, existingAudioSha);
+
+    if (coverFile) {
+      const coverExt = coverFile.name.includes('.') ? coverFile.name.split('.').pop().toLowerCase() : 'jpg';
+      coverPath = `songs/${base}.${coverExt}`;
+      setGhStatus('ジャケット画像をアップロード中...');
+      const coverB64 = await fileToBase64(coverFile);
+      const existingCoverSha = await ghGetSha(info, coverPath);
+      await ghPutFile(info, coverPath, coverB64, `ジャケットを追加: ${title}`, existingCoverSha);
+    }
+
+    setGhStatus('manifest.json を更新中...');
+    let duration = 0;
+    try { duration = await probeDuration(audioFile); } catch (e) {}
+    const manifestData = await ghApi(info, `contents/${MANIFEST_URL.split('/').map(encodeURIComponent).join('/')}`);
+    const manifest = JSON.parse(base64ToUtf8(manifestData.content));
+    if (!Array.isArray(manifest.tracks)) manifest.tracks = [];
+    manifest.tracks.push({
+      title, artist: artist || '', album: '',
+      file: audioPath, cover: coverPath || '',
+      duration: Math.round(duration) || 0,
+    });
+    const newManifestB64 = utf8ToBase64(JSON.stringify(manifest, null, 2));
+    await ghPutFile(info, MANIFEST_URL, newManifestB64, `manifest.jsonに追加: ${title}`, manifestData.sha);
+
+    setGhStatus('完了しました!');
+    showToast(`「${title}」を公開しました`);
+    state.ghAudioFile = null; state.ghCoverFile = null;
+    document.getElementById('ghTitleInput').value = '';
+    document.getElementById('ghArtistInput').value = '';
+    document.getElementById('ghAudioFileName').textContent = '';
+    document.getElementById('ghCoverFileName').textContent = '';
+    setTimeout(() => { closeModal('githubAddModal'); setGhStatus(''); }, 900);
+    // GitHub PagesのCDN反映には時間がかかることがあるため、少し待ってから再同期を試みる
+    setTimeout(async () => {
+      try {
+        await syncManifestTracks();
+        state.tracks = (await dbGetAll('tracks')).sort((a, b) => b.dateAdded - a.dateAdded);
+        renderCurrentView();
+      } catch (e) {}
+    }, 4000);
+  } catch (err) {
+    setGhStatus(err.message || 'エラーが発生しました');
+  } finally {
+    confirmBtn.disabled = false;
+  }
+}
+
 async function importFiles(fileList, albumId) {
   const files = Array.from(fileList);
   if (!files.length) return;
@@ -2686,6 +2873,24 @@ function closeSheet(id) { document.getElementById(id).classList.remove('open'); 
 function openModal(id) { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 
+function updateGhTokenUI() {
+  const has = !!getGhToken();
+  document.getElementById('ghTokenSection').classList.toggle('hidden', has);
+  document.getElementById('ghTokenSavedRow').classList.toggle('hidden', !has);
+}
+function openGithubAddModal() {
+  const info = detectGithubRepoInfo();
+  updateGhTokenUI();
+  document.getElementById('ghTitleInput').value = '';
+  document.getElementById('ghArtistInput').value = '';
+  document.getElementById('ghAudioFileName').textContent = '';
+  document.getElementById('ghCoverFileName').textContent = '';
+  state.ghAudioFile = null;
+  state.ghCoverFile = null;
+  setGhStatus(info ? '' : 'この機能はGitHub Pages上で開いている時だけ使えます。');
+  openModal('githubAddModal');
+}
+
 function openTrackSheet(trackId) {
   const t = getTrack(trackId);
   if (!t) return;
@@ -3335,6 +3540,39 @@ function bindStaticHandlers() {
   document.getElementById('addFilesItem').addEventListener('click', () => { closeSheet('addSheet'); document.getElementById('fileInput').click(); });
   document.getElementById('addAlbumItem').addEventListener('click', () => { closeSheet('addSheet'); openCreateAlbumModal(); });
   document.getElementById('addPlaylistItem').addEventListener('click', () => { closeSheet('addSheet'); openCreateCollection('playlist'); });
+  document.getElementById('addGithubItem').addEventListener('click', () => { closeSheet('addSheet'); openGithubAddModal(); });
+
+  // GitHubに公開して追加
+  document.getElementById('ghTokenChangeBtn').addEventListener('click', () => {
+    document.getElementById('ghTokenSection').classList.remove('hidden');
+    document.getElementById('ghTokenSavedRow').classList.add('hidden');
+    document.getElementById('ghTokenInput').value = '';
+    document.getElementById('ghTokenInput').focus();
+  });
+  document.getElementById('ghAudioPickBtn').addEventListener('click', () => document.getElementById('ghAudioInput').click());
+  document.getElementById('ghCoverPickBtn').addEventListener('click', () => document.getElementById('ghCoverInput').click());
+  document.getElementById('ghAudioInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    state.ghAudioFile = file || null;
+    document.getElementById('ghAudioFileName').textContent = file ? file.name : '';
+    if (file && !document.getElementById('ghTitleInput').value) {
+      document.getElementById('ghTitleInput').value = stripExt(file.name);
+    }
+  });
+  document.getElementById('ghCoverInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    state.ghCoverFile = file || null;
+    document.getElementById('ghCoverFileName').textContent = file ? file.name : '';
+  });
+  document.getElementById('ghUploadConfirm').addEventListener('click', () => {
+    const tokenInput = document.getElementById('ghTokenInput');
+    if (!document.getElementById('ghTokenSection').classList.contains('hidden') && tokenInput.value.trim()) {
+      setGhToken(tokenInput.value.trim());
+      updateGhTokenUI();
+    }
+    uploadTrackToGithub();
+  });
+  document.getElementById('ghCancelBtn').addEventListener('click', () => { setGhStatus(''); });
 
   // ファイル選択
   document.getElementById('fileInput').addEventListener('change', (e) => {
