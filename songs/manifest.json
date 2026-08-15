@@ -1,3 +1,12 @@
 {
-  "tracks": []
+  "tracks": [
+    {
+      "title": "Secret Night",
+      "artist": "ロボ",
+      "album": "",
+      "file": "songs/Secret Night - ロボ.mp4",
+      "cover": "songs/Secret Night - ロボ.jpeg",
+      "duration": 330
+    }
+  ]
 }
