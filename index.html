@@ -1975,6 +1975,47 @@ async function uploadTrackToGithub() {
   }
 }
 
+// songs/xxx.mp3 のような相対パスを、manifest形式のURL・GitHub raw URLの両方から取り出す
+function ghPathFromTrackUrl(url) {
+  if (!url) return null;
+  const idx = url.indexOf('songs/');
+  return idx > -1 ? url.slice(idx) : null;
+}
+// 既にGitHub上で公開済みの曲(id: manifest:... または ghfolder:...)の
+// タイトル/アーティスト/アルバム名を編集した際に、manifest.json側にも反映する。
+// これをしないと、次回サイトを開いた時にmanifest.jsonの内容で上書きされ、
+// 編集内容が元に戻ってしまう。
+// 戻り値: { ok: true } | { ok: false, reason: 'no-repo' | 'no-token' | 'not-found', error? }
+async function pushTrackEditToGithub(track, updates) {
+  const info = detectGithubRepoInfo();
+  if (!info) return { ok: false, reason: 'no-repo' };
+  if (!getGhToken()) return { ok: false, reason: 'no-token' };
+
+  const path = track.fileName ? `songs/${track.fileName}` : ghPathFromTrackUrl(track.fileUrl);
+  if (!path) return { ok: false, reason: 'not-found' };
+  const coverPath = ghPathFromTrackUrl(track.coverUrl) || '';
+
+  const manifestData = await ghApi(info, `contents/${MANIFEST_URL.split('/').map(encodeURIComponent).join('/')}`);
+  const manifest = JSON.parse(base64ToUtf8(manifestData.content));
+  if (!Array.isArray(manifest.tracks)) manifest.tracks = [];
+  const idx = manifest.tracks.findIndex(e => e && e.file === path);
+  if (idx > -1) {
+    manifest.tracks[idx].title = updates.title;
+    manifest.tracks[idx].artist = updates.artist;
+    manifest.tracks[idx].album = updates.album || '';
+  } else {
+    // まだmanifest.jsonに載っていない(自動フォルダ検出で表示されていただけの)曲を、
+    // ここで正式にmanifest.jsonへ登録する
+    manifest.tracks.push({
+      title: updates.title, artist: updates.artist, album: updates.album || '',
+      file: path, cover: coverPath, duration: Math.round(track.duration) || 0,
+    });
+  }
+  const newManifestB64 = utf8ToBase64(JSON.stringify(manifest, null, 2));
+  await ghPutFile(info, MANIFEST_URL, newManifestB64, `曲情報を更新: ${updates.title}`, manifestData.sha);
+  return { ok: true, path };
+}
+
 async function importFiles(fileList, albumId) {
   const files = Array.from(fileList);
   if (!files.length) return;
@@ -3751,20 +3792,53 @@ function bindStaticHandlers() {
   document.getElementById('editTrackConfirm').addEventListener('click', async () => {
     const t = getTrack(state.editingTrackId);
     if (!t) return;
+    const isPublished = t.id.startsWith('manifest:') || t.id.startsWith('ghfolder:');
     t.title = document.getElementById('editTitleInput').value.trim() || t.title;
     t.artist = document.getElementById('editArtistInput').value.trim() || t.artist;
     if (!t.albumId) {
       t.album = document.getElementById('editAlbumInput').value.trim();
     }
+    let coverNote = '';
     if (!t.albumId && pendingEditCoverBlob !== undefined) {
       t.coverBlob = pendingEditCoverBlob;
       state.coverURLCache.delete(t.id);
       state.squareArtworkCache.delete(t.id);
+      if (isPublished) coverNote = '(ジャケットの変更はGitHub側には未反映)';
     }
+
+    let finalMsg = '曲情報を保存しました' + coverNote;
+    if (isPublished) {
+      const btn = document.getElementById('editTrackConfirm');
+      btn.disabled = true;
+      try {
+        const result = await pushTrackEditToGithub(t, { title: t.title, artist: t.artist, album: t.album });
+        if (result.ok) {
+          finalMsg = 'GitHubにも反映しました' + coverNote;
+          // 自動フォルダ検出由来(ghfolder:)の曲が正式にmanifest.jsonへ登録されたので、
+          // IDを次回同期後と同じ形式(manifest:...)に付け替えて重複表示を防ぐ
+          if (t.id.startsWith('ghfolder:') && result.path) {
+            const oldId = t.id;
+            const newId = 'manifest:' + result.path;
+            await dbDelete('tracks', oldId);
+            t.id = newId;
+          }
+        } else if (result.reason === 'no-token') {
+          finalMsg = 'この端末だけの変更です(GitHubトークン未設定。「＋」→「GitHubに公開して追加」で設定できます)';
+        } else if (result.reason === 'no-repo') {
+          finalMsg = 'この端末だけの変更です(GitHub Pages以外では反映できません)';
+        } else {
+          finalMsg = 'GitHubへの反映に失敗したため、この端末だけの変更です';
+        }
+      } catch (err) {
+        finalMsg = 'GitHubへの反映エラー: ' + (err.message || '不明なエラー');
+      }
+      btn.disabled = false;
+    }
+
     await dbPut('tracks', t);
     closeModal('editTrackModal');
     renderCurrentView(); renderMiniPlayer(); renderNowPlaying();
-    showToast('曲情報を保存しました');
+    showToast(finalMsg);
   });
 
   // 歌詞編集モーダル
