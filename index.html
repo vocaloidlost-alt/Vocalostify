@@ -1768,6 +1768,19 @@ async function syncManifestTracks() {
   } catch (err) {
     // manifest.jsonが無い/読み込めない環境(ローカル利用など)では何もしない
   }
+  // manifest.jsonに正式登録された曲について、以前「自動フォルダ検出(ghfolder:)」側で
+  // 登録されていた重複レコードが残っていれば削除する。
+  // (GitHubへのコミット直後はCDNキャッシュの影響でmanifest.jsonの反映が一時的に遅れ、
+  // その間に自動検出側で二重登録されてしまうことがあるため、その掃除も兼ねる)
+  for (const path of manifestFiles) {
+    const ghId = 'ghfolder:' + path;
+    const stale = await dbGet('tracks', ghId);
+    if (stale) {
+      await dbDelete('tracks', ghId);
+      if (state.currentTrackId === ghId) state.currentTrackId = 'manifest:' + path;
+      state.recent = state.recent.filter(r => r.trackId !== ghId);
+    }
+  }
   await syncFolderTracks(manifestFiles);
 }
 // GitHub Pagesで公開している場合、songs/フォルダの中身をGitHubの公開APIで直接一覧取得し、
