@@ -1,0 +1,980 @@
+{
+  "tracks": [
+    {
+      "title": "ミルフィーユ",
+      "artist": "転校星",
+      "album": "",
+      "file": "songs/ミルフィーユ.wav",
+      "cover": "songs/ミルフィーユ.jpg",
+      "duration": 261
+    },
+    {
+      "title": "promise",
+      "artist": "島白",
+      "album": "",
+      "file": "songs/promise.mp3",
+      "cover": "songs/promise.jpg",
+      "duration": 221
+    },
+    {
+      "title": "主婦 can do the PUNK ROCK!!!",
+      "artist": "yotsng",
+      "album": "",
+      "file": "songs/3bhgx.mp4",
+      "cover": "songs/3bhgx.jpg",
+      "duration": 262
+    },
+    {
+      "title": "Cry Number",
+      "artist": "転校星",
+      "album": "",
+      "file": "songs/youtube-njemTcvUb70.76e2a513.mp4",
+      "cover": "songs/youtube-njemTcvUb70.76e2a513.jpg",
+      "duration": 171
+    },
+    {
+      "title": "Land Escape",
+      "artist": "転校星",
+      "album": "",
+      "file": "songs/youtube-uAA_S70KTYQ.ec3858a7.mp4",
+      "cover": "songs/youtube-uAA_S70KTYQ.ec3858a7.jpg",
+      "duration": 200
+    },
+    {
+      "title": "ワールドライブ",
+      "artist": "転校星",
+      "album": "",
+      "file": "songs/youtube-JUOZGTz8XCI.c5bd783e.mp4",
+      "cover": "songs/youtube-JUOZGTz8XCI.c5bd783e.jpg",
+      "duration": 187
+    },
+    {
+      "title": "思い出の歌",
+      "artist": "転校星",
+      "album": "",
+      "file": "songs/hyzht.mp4",
+      "cover": "songs/hyzht.jpg",
+      "duration": 237
+    },
+    {
+      "title": "偶然",
+      "artist": "転校星",
+      "album": "",
+      "file": "songs/youtube-oAAeR8Mp--k.d90e5c39.mp4",
+      "cover": "songs/youtube-oAAeR8Mp--k.d90e5c39.jpg",
+      "duration": 262
+    },
+    {
+      "title": "涙模様",
+      "artist": "転校星",
+      "album": "",
+      "file": "songs/youtube-gnfO21sDAeU.ca4d80d8.mp4",
+      "cover": "songs/youtube-gnfO21sDAeU.ca4d80d8.jpg",
+      "duration": 223
+    },
+    {
+      "title": "Melody Monster",
+      "artist": "転校星",
+      "album": "",
+      "file": "songs/youtube-gPPo2oUmrkE.c3da81e0.mp4",
+      "cover": "songs/youtube-gPPo2oUmrkE.c3da81e0.jpg",
+      "duration": 184
+    },
+    {
+      "title": "missing ahead",
+      "artist": "転校星",
+      "album": "",
+      "file": "songs/nd0jp.mp4",
+      "cover": "songs/nd0jp.jpg",
+      "duration": 206
+    },
+    {
+      "title": "ランダムウォーク",
+      "artist": "転校星",
+      "album": "",
+      "file": "songs/youtube-81Hsbjsk598.13369aef.mp4",
+      "cover": "songs/youtube-81Hsbjsk598.13369aef.jpg",
+      "duration": 219
+    },
+    {
+      "title": "Hang Dog School (Remaster)",
+      "artist": "転校星",
+      "album": "",
+      "file": "songs/youtube-VBYrJP5XTCE.def4a71a.mp4",
+      "cover": "songs/youtube-VBYrJP5XTCE.def4a71a.jpg",
+      "duration": 194
+    },
+    {
+      "title": "『クリエイター奨励プログラム』をぶっ潰せ！",
+      "artist": "転校星",
+      "album": "",
+      "file": "songs/7qeg9.mp4",
+      "cover": "songs/7qeg9.jpg",
+      "duration": 153
+    },
+    {
+      "title": "今日も来ない",
+      "artist": "緊急ゆるポート",
+      "album": "",
+      "file": "songs/youtube-n9ayvTm0qy0.0f6c0b2c.mp4",
+      "cover": "songs/youtube-n9ayvTm0qy0.0f6c0b2c.jpg",
+      "duration": 208
+    },
+    {
+      "title": "ジョウビタキ",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/youtube-qDfLtZz26Jc.a91b5de6.mp4",
+      "cover": "songs/youtube-qDfLtZz26Jc.a91b5de6.jpg",
+      "duration": 276
+    },
+    {
+      "title": "気取屋商売",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/wkctm.mp4",
+      "cover": "songs/wkctm.jpg",
+      "duration": 233
+    },
+    {
+      "title": "白い部屋、独り",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/youtube-1SBdUSK0Nqo.cd781c32.mp4",
+      "cover": "songs/youtube-1SBdUSK0Nqo.cd781c32.jpg",
+      "duration": 314
+    },
+    {
+      "title": "sanctuary",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/youtube-RO6tNkmQLM0.941f27d2.mp4",
+      "cover": "songs/youtube-RO6tNkmQLM0.941f27d2.jpg",
+      "duration": 251
+    },
+    {
+      "title": "カナカナカナカナ",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/youtube-8QlRymlOtRw.e9a75900.mp4",
+      "cover": "songs/youtube-8QlRymlOtRw.e9a75900.jpg",
+      "duration": 161
+    },
+    {
+      "title": "ソドム",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/youtube-Pyyn8TrCRTU.081ca31b.mp4",
+      "cover": "songs/youtube-Pyyn8TrCRTU.081ca31b.jpg",
+      "duration": 187
+    },
+    {
+      "title": "殲滅少女エディシウス",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/youtube-KiQxtspy5Og.cc5d88b4.mp4",
+      "cover": "songs/youtube-KiQxtspy5Og.cc5d88b4.jpg",
+      "duration": 177
+    },
+    {
+      "title": "ジ･レプリコン",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/ジ･レプリコン.m4a",
+      "cover": "songs/ジ･レプリコン.jpg",
+      "duration": 225
+    },
+    {
+      "title": "憂鬱空と女子高生",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/youtube-rXgu8jMzphw.d13d3fed.mp4",
+      "cover": "songs/youtube-rXgu8jMzphw.d13d3fed.jpg",
+      "duration": 226
+    },
+    {
+      "title": "羊飼いに灯火を",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/youtube-J66MTyPeHGE.5745ce3c.mp4",
+      "cover": "songs/youtube-J66MTyPeHGE.5745ce3c.jpg",
+      "duration": 245
+    },
+    {
+      "title": "紫陽花ノ芽",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/youtube-zbOolpCwNjo.59990140.mp4",
+      "cover": "songs/youtube-zbOolpCwNjo.59990140.jpg",
+      "duration": 261
+    },
+    {
+      "title": "DiRTY HARRY",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/youtube-a62K86iCtLg.3fb76731.mp4",
+      "cover": "songs/youtube-a62K86iCtLg.3fb76731.jpg",
+      "duration": 197
+    },
+    {
+      "title": "美しい死体",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/youtube-AisR05lAwI4.a2cd6838.mp4",
+      "cover": "songs/youtube-AisR05lAwI4.a2cd6838.jpg",
+      "duration": 198
+    },
+    {
+      "title": "春はワルツに乗って",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/youtube-Nq4PUJs9mG0.a38bcd39.mp4",
+      "cover": "songs/youtube-Nq4PUJs9mG0.a38bcd39.jpg",
+      "duration": 225
+    },
+    {
+      "title": "浮世遊び",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/youtube-7YA4GONGp3A.0ab56fcf.mp4",
+      "cover": "songs/youtube-7YA4GONGp3A.0ab56fcf.jpg",
+      "duration": 196
+    },
+    {
+      "title": "ペペロンチーノラブ",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/ra3bx.mp4",
+      "cover": "songs/ra3bx.jpg",
+      "duration": 215
+    },
+    {
+      "title": "これからも",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/youtube-rAYjEWkbt1w.490d38d7.mp4",
+      "cover": "songs/youtube-rAYjEWkbt1w.490d38d7.jpg",
+      "duration": 262
+    },
+    {
+      "title": "ブルートライブ",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/youtube-V-gBOQTtUu8.865569b9.mp4",
+      "cover": "songs/youtube-V-gBOQTtUu8.865569b9.jpg",
+      "duration": 218
+    },
+    {
+      "title": "流星の季節",
+      "artist": "syudou",
+      "album": "",
+      "file": "songs/50y76.mp4",
+      "cover": "songs/50y76.jpg",
+      "duration": 229
+    },
+    {
+      "title": "Daitankei",
+      "artist": "samplingsampling",
+      "album": "",
+      "file": "songs/youtube-Vvm2Yam5Huo.1f727799.mp4",
+      "cover": "songs/youtube-Vvm2Yam5Huo.1f727799.jpg",
+      "duration": 136
+    },
+    {
+      "title": "TokaiSong",
+      "artist": "samplingsampling",
+      "album": "",
+      "file": "songs/youtube-SIGlA5PnACk.084b4377.mp4",
+      "cover": "songs/youtube-SIGlA5PnACk.084b4377.jpg",
+      "duration": 185
+    },
+    {
+      "title": "ASAsong",
+      "artist": "samplingsampling",
+      "album": "",
+      "file": "songs/youtube-Gs1lBWyHGUg.634f551a.mp4",
+      "cover": "songs/youtube-Gs1lBWyHGUg.634f551a.jpg",
+      "duration": 127
+    },
+    {
+      "title": "BedroomAlone",
+      "artist": "samplingsampling",
+      "album": "",
+      "file": "songs/youtube-PAh15G6G3oE.4e7408b3.mp4",
+      "cover": "songs/youtube-PAh15G6G3oE.4e7408b3.jpg",
+      "duration": 229
+    },
+    {
+      "title": "ReturnToSenderMan",
+      "artist": "samplingsampling",
+      "album": "",
+      "file": "songs/youtube-a8YAzew-NQQ.1ebdc346.mp4",
+      "cover": "songs/youtube-a8YAzew-NQQ.1ebdc346.jpg",
+      "duration": 127
+    },
+    {
+      "title": "1972s Broken Toys",
+      "artist": "samplingsampling",
+      "album": "",
+      "file": "songs/youtube-orJp18udQaw.c2dcf06a.mp4",
+      "cover": "songs/youtube-orJp18udQaw.c2dcf06a.jpg",
+      "duration": 145
+    },
+    {
+      "title": "India and Rock",
+      "artist": "samplingsampling",
+      "album": "",
+      "file": "songs/youtube-YD39NkK_-Vg.5c13b4d4.mp4",
+      "cover": "songs/youtube-YD39NkK_-Vg.5c13b4d4.jpg",
+      "duration": 120
+    },
+    {
+      "title": "27315_0.0",
+      "artist": "0k",
+      "album": "",
+      "file": "songs/youtube-w-KSJjHqnHA.5b952c19.mp4",
+      "cover": "songs/youtube-w-KSJjHqnHA.5b952c19.jpg",
+      "duration": 91
+    },
+    {
+      "title": "創傷カメラ",
+      "artist": "HAMO",
+      "album": "",
+      "file": "songs/youtube-BbSonGth_Xg.19e2c0d8.mp4",
+      "cover": "songs/youtube-BbSonGth_Xg.19e2c0d8.jpg",
+      "duration": 254
+    },
+    {
+      "title": "溺死した死体と水車",
+      "artist": "HAMO",
+      "album": "",
+      "file": "songs/【初音ミク】溺死した死体と水車【MP3配布(320kbps)】_HAMOloid_202608101317.mp3",
+      "cover": "songs/【初音ミク】溺死した死体と水車【MP3配布(320kbps)】_HAMOloid_202608101317.jpg",
+      "duration": 181
+    },
+    {
+      "title": "渋谷メランコリ",
+      "artist": "Dr.Willy",
+      "album": "",
+      "file": "songs/REMASTERED.mp4",
+      "cover": "songs/REMASTERED.jpg",
+      "duration": 280
+    },
+    {
+      "title": "亜空間255",
+      "artist": "Dr.Willy",
+      "album": "",
+      "file": "songs/youtube-sWq6TSrExfU.13085843.mp4",
+      "cover": "songs/youtube-sWq6TSrExfU.13085843.jpg",
+      "duration": 272
+    },
+    {
+      "title": "まるで瑣末なゴミのよう",
+      "artist": "Dr.Willy",
+      "album": "",
+      "file": "songs/youtube-nYugCQlwy80.c37ae0b5.mp4",
+      "cover": "songs/youtube-nYugCQlwy80.c37ae0b5.jpg",
+      "duration": 147
+    },
+    {
+      "title": "幻想回廊",
+      "artist": "Dr.Willy",
+      "album": "",
+      "file": "songs/youtube-aHukMlJD3rk.ab5bef52.mp4",
+      "cover": "songs/youtube-aHukMlJD3rk.ab5bef52.jpg",
+      "duration": 206
+    },
+    {
+      "title": "欠陥ブルー",
+      "artist": "Dr.Willy",
+      "album": "",
+      "file": "songs/youtube-Qf7i7Tu8Wdk.31763316.mp4",
+      "cover": "songs/youtube-Qf7i7Tu8Wdk.31763316.jpg",
+      "duration": 298
+    },
+    {
+      "title": "東の空は燃えている",
+      "artist": "Dr.Willy",
+      "album": "",
+      "file": "songs/youtube-kKSAnRNdPio.adeee174.mp4",
+      "cover": "songs/youtube-kKSAnRNdPio.adeee174.jpg",
+      "duration": 244
+    },
+    {
+      "title": "豊饒レッド",
+      "artist": "Dr.Willy",
+      "album": "",
+      "file": "songs/youtube-wpIvFDlvFKg.e678b047.mp4",
+      "cover": "songs/youtube-wpIvFDlvFKg.e678b047.jpg",
+      "duration": 266
+    },
+    {
+      "title": "27315_2.1",
+      "artist": "0k",
+      "album": "",
+      "file": "songs/youtube-DxFE1HYggvM.42089921.mp4",
+      "cover": "songs/youtube-DxFE1HYggvM.42089921.jpg",
+      "duration": 98
+    },
+    {
+      "title": "27315_4.0",
+      "artist": "0k",
+      "album": "",
+      "file": "songs/youtube-ILzY2w6OfuM.ac1bdf7f.mp4",
+      "cover": "songs/youtube-ILzY2w6OfuM.ac1bdf7f.jpg",
+      "duration": 224
+    },
+    {
+      "title": "27315_7.0",
+      "artist": "0k",
+      "album": "",
+      "file": "songs/youtube-9G32NQFL-ng.c61fdadc.mp4",
+      "cover": "songs/youtube-9G32NQFL-ng.c61fdadc.jpg",
+      "duration": 83
+    },
+    {
+      "title": "27315_7.1",
+      "artist": "0k",
+      "album": "",
+      "file": "songs/youtube-sdHAgL11Um8.1b8de9df.mp4",
+      "cover": "songs/youtube-sdHAgL11Um8.1b8de9df.jpg",
+      "duration": 86
+    },
+    {
+      "title": "27315_5.0",
+      "artist": "0k",
+      "album": "",
+      "file": "songs/youtube-jCXTznuP5-8.9f8fb6ad.mp4",
+      "cover": "songs/youtube-jCXTznuP5-8.9f8fb6ad.jpg",
+      "duration": 175
+    },
+    {
+      "title": "タイムマシン",
+      "artist": "Dr.Willy",
+      "album": "",
+      "file": "songs/voSNcGWuKA4.mp4",
+      "cover": "songs/voSNcGWuKA4.jpg",
+      "duration": 302
+    },
+    {
+      "title": "海の底",
+      "artist": "鬱...",
+      "album": "",
+      "file": "songs/videoplayback_2.mov",
+      "cover": "songs/videoplayback_2.jpg",
+      "duration": 111
+    },
+    {
+      "title": "現在進行過去完了",
+      "artist": "Dr.Willy",
+      "album": "",
+      "file": "songs/youtube-dO7lN1kDSFI.4f2c823d.mp4",
+      "cover": "songs/youtube-dO7lN1kDSFI.4f2c823d.jpg",
+      "duration": 340
+    },
+    {
+      "title": "アヤメ",
+      "artist": "Dr.Willy",
+      "album": "",
+      "file": "songs/youtube-OwaBI7zFsAQ.19aa465e.mp4",
+      "cover": "songs/youtube-OwaBI7zFsAQ.19aa465e.jpg",
+      "duration": 451
+    },
+    {
+      "title": "潮騒に砂は哭く　～ Siren～",
+      "artist": "Dr.Willy",
+      "album": "",
+      "file": "songs/xc8i9.mp4",
+      "cover": "songs/xc8i9.jpg",
+      "duration": 475
+    },
+    {
+      "title": "正体不明",
+      "artist": "Dr.Willy",
+      "album": "",
+      "file": "songs/youtube-35_FHSugc3w.71225700.mp4",
+      "cover": "songs/youtube-35_FHSugc3w.71225700.jpg",
+      "duration": 180
+    },
+    {
+      "title": "三枚目のテーマ",
+      "artist": "Dr.Willy",
+      "album": "",
+      "file": "songs/youtube-x-c_HKq3U-Y.8c4f51e7.mp4",
+      "cover": "songs/youtube-x-c_HKq3U-Y.8c4f51e7.jpg",
+      "duration": 201
+    },
+    {
+      "title": "光がいっぱいの日",
+      "artist": "inaphon",
+      "album": "",
+      "file": "songs/youtube-8xP-R77A2-Y.0e296811.mp4",
+      "cover": "songs/youtube-8xP-R77A2-Y.0e296811.jpg",
+      "duration": 75
+    },
+    {
+      "title": "サヨナラワンダーランド",
+      "artist": "ぱたや",
+      "album": "",
+      "file": "songs/youtube-03_YCfvtwIY.7cf92ec5.mp4",
+      "cover": "songs/youtube-03_YCfvtwIY.7cf92ec5.jpg",
+      "duration": 166
+    },
+    {
+      "title": "コキュウ",
+      "artist": "ぱたや",
+      "album": "",
+      "file": "songs/youtube-5fYPrmvcIwY.ff747fd1.mp4",
+      "cover": "songs/youtube-5fYPrmvcIwY.ff747fd1.jpg",
+      "duration": 356
+    },
+    {
+      "title": "ニジゲン",
+      "artist": "ぱたや",
+      "album": "",
+      "file": "songs/youtube-Zn2vogvlUnw.a0704d07.mp4",
+      "cover": "songs/youtube-Zn2vogvlUnw.a0704d07.jpg",
+      "duration": 175
+    },
+    {
+      "title": "ここから",
+      "artist": "ぱたや",
+      "album": "",
+      "file": "songs/youtube-ngUQiw_aYZA.2678ac9a.mp4",
+      "cover": "songs/youtube-ngUQiw_aYZA.2678ac9a.jpg",
+      "duration": 293
+    },
+    {
+      "title": "僕と少女と夏休み",
+      "artist": "ぱたや",
+      "album": "",
+      "file": "songs/youtube-HvbtrDrmn48.08d7d5e1.mov",
+      "cover": "songs/youtube-HvbtrDrmn48.08d7d5e1.jpg",
+      "duration": 286
+    },
+    {
+      "title": "イル - イムデミ ポスト",
+      "artist": "森田優大",
+      "album": "",
+      "file": "songs/7h3bb.mp4",
+      "cover": "songs/7h3bb.jpg",
+      "duration": 205
+    },
+    {
+      "title": "sing",
+      "artist": "紙戦車",
+      "album": "",
+      "file": "songs/youtube-4_dNa2zGAAM.4c940716.mp4",
+      "cover": "songs/youtube-4_dNa2zGAAM.4c940716.jpg",
+      "duration": 180
+    },
+    {
+      "title": "引き篭もりの唄",
+      "artist": "ふみP",
+      "album": "",
+      "file": "songs/youtube-yREA4lGrHxk.e6f40ce9.mp4",
+      "cover": "songs/youtube-yREA4lGrHxk.e6f40ce9.jpg",
+      "duration": 258
+    },
+    {
+      "title": "HEAVEN",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-j43nrnGhao8.bd72d32a.mp4",
+      "cover": "songs/youtube-j43nrnGhao8.bd72d32a.jpg",
+      "duration": 327
+    },
+    {
+      "title": "A SONG OF LIFE",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/lddx1.mp4",
+      "cover": "songs/lddx1.jpg",
+      "duration": 665
+    },
+    {
+      "title": "おねえさまといっしょ",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-OMDEWfNmTVc.ecf98f05.mp4",
+      "cover": "songs/youtube-OMDEWfNmTVc.ecf98f05.jpg",
+      "duration": 244
+    },
+    {
+      "title": "rhapsody in black",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/gkpvt.mp4",
+      "cover": "songs/gkpvt.jpg",
+      "duration": 273
+    },
+    {
+      "title": "ウルトラマリン",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-bCnVw2Lti2A.fa97362c.mp4",
+      "cover": "songs/youtube-bCnVw2Lti2A.fa97362c.jpg",
+      "duration": 305
+    },
+    {
+      "title": "please, DIE.",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-a6xK8VM_kAE.ad345e51.mp4",
+      "cover": "songs/youtube-a6xK8VM_kAE.ad345e51.jpg",
+      "duration": 236
+    },
+    {
+      "title": "或る女が昼下がりの川縁で遭った出来事",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-1X09P9Cd2DI.babf8ce1.mp4",
+      "cover": "songs/youtube-1X09P9Cd2DI.babf8ce1.jpg",
+      "duration": 241
+    },
+    {
+      "title": "I have no friend",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-Ow6SDZrI6h8.fb6e9520.mp4",
+      "cover": "songs/youtube-Ow6SDZrI6h8.fb6e9520.jpg",
+      "duration": 158
+    },
+    {
+      "title": "EXECUTION",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-UVpxHACCdhw.43740ba6.mp4",
+      "cover": "songs/youtube-UVpxHACCdhw.43740ba6.jpg",
+      "duration": 238
+    },
+    {
+      "title": "自由という名の病巣",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-I2ibr0DAiK8.33f16e3e.mp4",
+      "cover": "songs/youtube-I2ibr0DAiK8.33f16e3e.jpg",
+      "duration": 217
+    },
+    {
+      "title": "国境の上の愛のうた",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-PQMWeNcKgHY.b963dbae.mp4",
+      "cover": "songs/youtube-PQMWeNcKgHY.b963dbae.jpg",
+      "duration": 226
+    },
+    {
+      "title": "福岡市ゴジラ",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-oECnZdchFkY.8e9414ae.mp4",
+      "cover": "songs/youtube-oECnZdchFkY.8e9414ae.jpg",
+      "duration": 139
+    },
+    {
+      "title": "SAVE YOUR SOUL",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-pdYFa-gNv7U.4977ee25.mp4",
+      "cover": "songs/youtube-pdYFa-gNv7U.4977ee25.jpg",
+      "duration": 260
+    },
+    {
+      "title": "LOTUS LOVE",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-nVWO2V1TB-k.083c4f18.mp4",
+      "cover": "songs/youtube-nVWO2V1TB-k.083c4f18.jpg",
+      "duration": 249
+    },
+    {
+      "title": "X X X",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-U3OG5AxWzzw.3af42222.mp4",
+      "cover": "songs/youtube-U3OG5AxWzzw.3af42222.jpg",
+      "duration": 309
+    },
+    {
+      "title": "CRUSH DOWN",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/dobk0.mp4",
+      "cover": "songs/dobk0.jpg",
+      "duration": 290
+    },
+    {
+      "title": "太陽の季節",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-BB503_m07zs.f1dcf354.mp4",
+      "cover": "songs/youtube-BB503_m07zs.f1dcf354.jpg",
+      "duration": 284
+    },
+    {
+      "title": "雫",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/tols9.mp4",
+      "cover": "songs/tols9.jpg",
+      "duration": 379
+    },
+    {
+      "title": "夏が終わる日",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/9qx9s.mp4",
+      "cover": "songs/9qx9s.jpg",
+      "duration": 373
+    },
+    {
+      "title": "METROPOLIS CRISIS",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/6pmck.mp4",
+      "cover": "songs/6pmck.jpg",
+      "duration": 233
+    },
+    {
+      "title": "SO-ARROW",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-W6eImG9YWWw.ac016c6b.mp4",
+      "cover": "songs/youtube-W6eImG9YWWw.ac016c6b.jpg",
+      "duration": 259
+    },
+    {
+      "title": "Psychopathic Fanatic Aggressive Depressive Screaming",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-e8wdB6RSaso.c1c4cf52.mp4",
+      "cover": "songs/youtube-e8wdB6RSaso.c1c4cf52.jpg",
+      "duration": 91
+    },
+    {
+      "title": "RINGIN' THE BELL OF LOVE",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/yrnz2.mp4",
+      "cover": "songs/yrnz2.jpg",
+      "duration": 235
+    },
+    {
+      "title": "CLEAR WAVE",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube-4gWO8Ld12zI.45b0f7dc.mp4",
+      "cover": "songs/youtube-4gWO8Ld12zI.45b0f7dc.jpg",
+      "duration": 230
+    },
+    {
+      "title": "BE-LIE-VE",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/dx9ks.mp4",
+      "cover": "songs/dx9ks.jpg",
+      "duration": 270
+    },
+    {
+      "title": "Heartbreaking HURT",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/youtube--ZRZ9SUkKeQ.f5197960.mp4",
+      "cover": "songs/youtube--ZRZ9SUkKeQ.f5197960.jpg",
+      "duration": 268
+    },
+    {
+      "title": "Heartbreaking hurt -reverse-",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/exeod.mp4",
+      "cover": "songs/exeod.jpg",
+      "duration": 271
+    },
+    {
+      "title": "Round & Round Girl",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/cw3l5.mp4",
+      "cover": "songs/cw3l5.jpg",
+      "duration": 231
+    },
+    {
+      "title": "永訣の朝 -bright lights-",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/w7dpv.mp4",
+      "cover": "songs/w7dpv.jpg",
+      "duration": 430
+    },
+    {
+      "title": "endless blue",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/wm04v.mp4",
+      "cover": "songs/wm04v.jpg",
+      "duration": 325
+    },
+    {
+      "title": "Virginity Lost",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/Lily - Virginity Lost.mp3",
+      "cover": "songs/Lily - Virginity Lost.jpg",
+      "duration": 262
+    },
+    {
+      "title": "crush down (2011)",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/cbqjg.mp4",
+      "cover": "songs/cbqjg.jpg",
+      "duration": 302
+    },
+    {
+      "title": "metropolis crisis (2011)",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/0wuj7.mp4",
+      "cover": "songs/0wuj7.jpg",
+      "duration": 298
+    },
+    {
+      "title": "雫 (2011)",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/7ef5w.mp4",
+      "cover": "songs/7ef5w.jpg",
+      "duration": 387
+    },
+    {
+      "title": "libido",
+      "artist": "Tatsuro",
+      "album": "",
+      "file": "songs/6c49u.mp4",
+      "cover": "songs/6c49u.jpg",
+      "duration": 332
+    },
+    {
+      "title": "フカンゼンホログラフィー",
+      "artist": "ねがぴ",
+      "album": "",
+      "file": "songs/youtube-zBa7txasYEs.11bd660c.mp4",
+      "cover": "songs/youtube-zBa7txasYEs.11bd660c.jpg",
+      "duration": 186
+    },
+    {
+      "title": "おでぃんはわい",
+      "artist": "うなP",
+      "album": "",
+      "file": "songs/youtube-44x-mkOWniQ.a0ed0d2f.mp4",
+      "cover": "songs/youtube-44x-mkOWniQ.a0ed0d2f.jpg",
+      "duration": 101
+    },
+    {
+      "title": "おふろ",
+      "artist": "うなP",
+      "album": "",
+      "file": "songs/qlpts.mp4",
+      "cover": "songs/qlpts.jpg",
+      "duration": 156
+    },
+    {
+      "title": "マフィアゲー",
+      "artist": "うなP",
+      "album": "",
+      "file": "songs/youtube-_KwfX8R6MTo.461fbd74.mp4",
+      "cover": "songs/youtube-_KwfX8R6MTo.461fbd74.jpg",
+      "duration": 125
+    },
+    {
+      "title": "SONG of NIKU",
+      "artist": "うなP",
+      "album": "",
+      "file": "songs/2dtdn.mp4",
+      "cover": "songs/2dtdn.jpg",
+      "duration": 248
+    },
+    {
+      "title": "moon",
+      "artist": "うなP",
+      "album": "",
+      "file": "songs/2x61b.mp4",
+      "cover": "songs/2x61b.jpg",
+      "duration": 252
+    },
+    {
+      "title": "カミサマナンテイナイ",
+      "artist": "Cie",
+      "album": "",
+      "file": "songs/youtube-Xt-6JzGhSFs.49003ff2.mp4",
+      "cover": "songs/youtube-Xt-6JzGhSFs.49003ff2.jpg",
+      "duration": 243
+    },
+    {
+      "title": "ありがとう、でも余計なお世話",
+      "artist": "Cie",
+      "album": "",
+      "file": "songs/youtube-NoV4S1MlQ6A.9c394d18.mp4",
+      "cover": "songs/youtube-NoV4S1MlQ6A.9c394d18.jpg",
+      "duration": 240
+    },
+    {
+      "title": "はぐるまのうた",
+      "artist": "Cie",
+      "album": "",
+      "file": "songs/youtube-xCPDqn6zDCw.273d58ba.mp4",
+      "cover": "songs/youtube-xCPDqn6zDCw.273d58ba.jpg",
+      "duration": 162
+    },
+    {
+      "title": "[ i ]",
+      "artist": "ΘinKLavia",
+      "album": "",
+      "file": "songs/youtube-B81wN9ojqCY.7f053c43.mp4",
+      "cover": "songs/youtube-B81wN9ojqCY.7f053c43.jpg",
+      "duration": 193
+    },
+    {
+      "title": "IN MY DREAM",
+      "artist": "ΘinKLavia",
+      "album": "",
+      "file": "songs/youtube-ZCBuMM96yvM.a38bc7db.mp4",
+      "cover": "songs/youtube-ZCBuMM96yvM.a38bc7db.jpg",
+      "duration": 223
+    },
+    {
+      "title": "机上の魔法のボールペン",
+      "artist": "ΘinKLavia",
+      "album": "",
+      "file": "songs/youtube-Vn10XA0UOpo.65445c82.mp4",
+      "cover": "songs/youtube-Vn10XA0UOpo.65445c82.jpg",
+      "duration": 195
+    },
+    {
+      "title": "Colorless World",
+      "artist": "ΘinKLavia",
+      "album": "",
+      "file": "songs/youtube-IlLZ8SfDC5s.fb575c60.mp4",
+      "cover": "songs/youtube-IlLZ8SfDC5s.fb575c60.jpg",
+      "duration": 197
+    },
+    {
+      "title": "暗い？明るい？",
+      "artist": "えとゆま",
+      "album": "",
+      "file": "songs/youtube-rF54FMyrKOM.2fb9e440.mp4",
+      "cover": "songs/youtube-rF54FMyrKOM.2fb9e440.jpg",
+      "duration": 143
+    },
+    {
+      "title": "シナリオライター",
+      "artist": "えとゆま",
+      "album": "",
+      "file": "songs/w0gvg.mp4",
+      "cover": "songs/w0gvg.jpg",
+      "duration": 286
+    }
+  ]
+}
