@@ -760,7 +760,7 @@ img{ -webkit-user-drag:none; user-select:none; }
 <!-- ===================== ミニプレイヤー ===================== -->
 <div class="mini-player" id="miniPlayer">
   <div class="mini-progress"><div class="mini-progress-fill" id="miniProgressFill"></div></div>
-  <img class="mini-cover" id="miniCover" src="" alt="">
+  <img class="mini-cover" id="miniCover" src="" alt="" onerror="handleCoverError(this)">
   <div class="mini-info">
     <div class="mini-title" id="miniTitle">再生する曲がありません</div>
     <div class="mini-artist" id="miniArtist"></div>
@@ -784,7 +784,7 @@ img{ -webkit-user-drag:none; user-select:none; }
 
   <div class="np-body" id="npBody">
     <div class="np-cover-wrap" id="npCoverWrap">
-      <img id="npCover" class="np-cover" src="" alt="">
+      <img id="npCover" class="np-cover" src="" alt="" onerror="handleCoverError(this)">
     </div>
     <div class="np-titles">
       <div class="np-titles-text">
@@ -954,7 +954,7 @@ img{ -webkit-user-drag:none; user-select:none; }
   <div class="modal-box">
     <div class="modal-title" id="createAlbumTitle">新規アルバム</div>
     <div class="edit-cover-row">
-      <img id="albumCoverPreview" class="edit-cover-preview" src="" alt="">
+      <img id="albumCoverPreview" class="edit-cover-preview" src="" alt="" onerror="handleCoverError(this)">
       <div>
         <button class="modal-btn secondary small" id="albumCoverPickBtn">ジャケット画像を変更</button>
         <input type="file" id="albumCoverInput" accept="image/*" hidden>
@@ -977,7 +977,7 @@ img{ -webkit-user-drag:none; user-select:none; }
   <div class="modal-box modal-box-lg">
     <div class="modal-title">曲情報を編集</div>
     <div class="edit-cover-row" id="editCoverRow">
-      <img id="editCoverPreview" class="edit-cover-preview" src="" alt="">
+      <img id="editCoverPreview" class="edit-cover-preview" src="" alt="" onerror="handleCoverError(this)">
       <div>
         <button class="modal-btn secondary small" id="editCoverPickBtn">画像を変更</button>
         <input type="file" id="editCoverInput" accept="image/*" hidden>
@@ -1032,10 +1032,11 @@ img{ -webkit-user-drag:none; user-select:none; }
     <div class="empty-hint" id="ghCoverFileName" style="margin:2px 0 12px;padding:0;font-size:12.5px;"></div>
 
     <div class="empty-hint" id="ghUploadStatus" style="margin:0 0 6px;padding:0;min-height:16px;font-size:12.5px;"></div>
+    <div id="ghQueueStatus" style="margin:0 0 6px;display:flex;flex-direction:column;gap:4px;"></div>
 
     <div class="modal-row">
-      <button class="modal-btn secondary" data-close-modal id="ghCancelBtn">キャンセル</button>
-      <button class="modal-btn primary" id="ghUploadConfirm">公開する</button>
+      <button class="modal-btn secondary" data-close-modal id="ghCancelBtn">閉じる</button>
+      <button class="modal-btn primary" id="ghUploadConfirm">公開してすぐ次の曲へ</button>
     </div>
   </div>
 </div>
@@ -1402,6 +1403,13 @@ const DEFAULT_COVER =
       <rect x="96" y="46" width="78" height="8"/>
     </g>
   </svg>`);
+
+// GitHubから読み込んだジャケット画像が404などで読み込めなかった時に、
+// 壊れた画像アイコンのまま表示され続けないよう、デフォルトのジャケットに差し替える
+function handleCoverError(img) {
+  img.onerror = null; // 無限ループ防止
+  img.src = DEFAULT_COVER;
+}
 
 // アーティストのアイコン画像が未設定のときのデフォルト（人型シルエット）
 const DEFAULT_ARTIST_ICON =
@@ -1924,65 +1932,133 @@ async function ghDeleteFile(info, path, message) {
 }
 function setGhStatus(msg) { const el = document.getElementById('ghUploadStatus'); if (el) el.textContent = msg || ''; }
 
-async function uploadTrackToGithub() {
+// GitHubへのmanifest.json書き込みは、複数の操作(曲追加・編集・削除など)が
+// 同時に走ると sha の競合で失敗することがあるため、直列化して1つずつ実行する。
+let ghManifestMutex = Promise.resolve();
+function withGhManifestLock(taskFn) {
+  const result = ghManifestMutex.then(taskFn, taskFn);
+  ghManifestMutex = result.then(() => {}, () => {});
+  return result;
+}
+
+// ===== 曲追加の背景キュー =====
+// 「公開する」を押した瞬間に入力欄をリセットして次の曲をすぐ入力できるようにし、
+// 実際のアップロード処理(時間のかかる部分)は裏側で1件ずつ順番に進める。
+const ghUploadQueue = []; // { uid, title, artist, audioFile, coverFile, status, message }
+
+function renderGhQueueStatus() {
+  const box = document.getElementById('ghQueueStatus');
+  if (!box) return;
+  box.innerHTML = ghUploadQueue.map(job => {
+    const icon = job.status === 'done' ? '✓' : job.status === 'error' ? '✗' : '…';
+    const color = job.status === 'done' ? 'var(--accent)' : job.status === 'error' ? '#ff6b6b' : 'var(--text-sub)';
+    return `<div style="display:flex;gap:6px;align-items:baseline;font-size:12.5px;color:${color};">
+      <span>${icon}</span><span style="flex:1;">${escapeHTML(job.title)}${job.message ? ' - ' + escapeHTML(job.message) : ''}</span>
+    </div>`;
+  }).join('');
+}
+function updateGhJob(job, status, message) {
+  job.status = status;
+  job.message = message || '';
+  renderGhQueueStatus();
+  if (status === 'done' || status === 'error') {
+    // 完了/失敗した項目はしばらくしたら一覧から消す(たまり続けないように)
+    setTimeout(() => {
+      const i = ghUploadQueue.indexOf(job);
+      if (i > -1) ghUploadQueue.splice(i, 1);
+      renderGhQueueStatus();
+    }, status === 'done' ? 3500 : 8000);
+  }
+}
+
+function enqueueGithubUpload() {
   const info = detectGithubRepoInfo();
-  if (!info) { setGhStatus('この画面はGitHub Pages上で開いた場合のみ利用できます。'); return; }
-  const token = getGhToken();
-  if (!token) { setGhStatus('先にGitHubトークンを入力してください。'); return; }
+  if (!info) { setGhStatus('この機能はGitHub Pages上で開いている時だけ使えます。'); return; }
+  if (!getGhToken()) { setGhStatus('先にGitHubトークンを入力してください。'); return; }
 
   const title = document.getElementById('ghTitleInput').value.trim();
   const artist = document.getElementById('ghArtistInput').value.trim();
   const audioFile = state.ghAudioFile;
   const coverFile = state.ghCoverFile;
-
   if (!title) { setGhStatus('曲名を入力してください。'); return; }
   if (!audioFile) { setGhStatus('音源/映像ファイルを選択してください。'); return; }
 
-  const confirmBtn = document.getElementById('ghUploadConfirm');
-  confirmBtn.disabled = true;
+  // すぐに入力欄をリセットして、次の曲をそのまま続けて入力できるようにする
+  state.ghAudioFile = null; state.ghCoverFile = null;
+  document.getElementById('ghTitleInput').value = '';
+  document.getElementById('ghArtistInput').value = '';
+  document.getElementById('ghAudioFileName').textContent = '';
+  document.getElementById('ghCoverFileName').textContent = '';
+  setGhStatus('');
+
+  const job = { uid: uid(), title, artist, audioFile, coverFile, status: 'queued', message: '待機中...' };
+  ghUploadQueue.push(job);
+  renderGhQueueStatus();
+  showToast(`「${title}」をバックグラウンドで公開中...`);
+  pumpGhUploadQueue();
+}
+
+// 曲ごとの音源/ジャケットのアップロードは同時に進めても問題ない(ファイルパスが別々のため)。
+// manifest.jsonへの書き込みだけは withGhManifestLock で直列化しているので競合しない。
+// 同時実行数は端末の回線・メモリへの配慮として上限を設ける。
+const GH_MAX_CONCURRENT_UPLOADS = 2;
+let ghActiveUploads = 0;
+function pumpGhUploadQueue() {
+  while (ghActiveUploads < GH_MAX_CONCURRENT_UPLOADS) {
+    const job = ghUploadQueue.find(j => j.status === 'queued');
+    if (!job) break;
+    job.status = 'starting'; // 二重取得防止のため即座にqueued状態から外す
+    ghActiveUploads++;
+    runGhUploadJob(job).finally(() => {
+      ghActiveUploads--;
+      pumpGhUploadQueue();
+    });
+  }
+}
+
+async function runGhUploadJob(job) {
+  const info = detectGithubRepoInfo();
+  const { title, artist, audioFile, coverFile } = job;
+  updateGhJob(job, 'uploading', '音源を読み込み中...');
   try {
     const base = sanitizeGhFilename(artist ? `${title} - ${artist}` : title);
     const audioExt = audioFile.name.includes('.') ? audioFile.name.split('.').pop().toLowerCase() : 'mp3';
     const audioPath = `songs/${base}.${audioExt}`;
     let coverPath = null;
 
-    setGhStatus('音源データを読み込み中...');
     const audioB64 = await fileToBase64(audioFile);
-    setGhStatus(`音源をアップロード中... (${audioFile.name})`);
+    updateGhJob(job, 'uploading', '音源をアップロード中...');
     const existingAudioSha = await ghGetSha(info, audioPath);
     await ghPutFile(info, audioPath, audioB64, `曲を追加: ${title}`, existingAudioSha);
 
     if (coverFile) {
       const coverExt = coverFile.name.includes('.') ? coverFile.name.split('.').pop().toLowerCase() : 'jpg';
       coverPath = `songs/${base}.${coverExt}`;
-      setGhStatus('ジャケット画像をアップロード中...');
+      updateGhJob(job, 'uploading', 'ジャケットをアップロード中...');
       const coverB64 = await fileToBase64(coverFile);
       const existingCoverSha = await ghGetSha(info, coverPath);
       await ghPutFile(info, coverPath, coverB64, `ジャケットを追加: ${title}`, existingCoverSha);
     }
 
-    setGhStatus('manifest.json を更新中...');
+    updateGhJob(job, 'uploading', 'manifest.jsonを更新中...');
     let duration = 0;
     try { duration = await probeDuration(audioFile); } catch (e) {}
-    const manifestData = await ghApi(info, `contents/${MANIFEST_URL.split('/').map(encodeURIComponent).join('/')}`);
-    const manifest = JSON.parse(base64ToUtf8(manifestData.content));
-    if (!Array.isArray(manifest.tracks)) manifest.tracks = [];
-    manifest.tracks.push({
-      title, artist: artist || '', album: '',
-      file: audioPath, cover: coverPath || '',
-      duration: Math.round(duration) || 0,
-    });
-    const newManifestB64 = utf8ToBase64(JSON.stringify(manifest, null, 2));
-    await ghPutFile(info, MANIFEST_URL, newManifestB64, `manifest.jsonに追加: ${title}`, manifestData.sha);
 
-    setGhStatus('完了しました!');
+    await withGhManifestLock(async () => {
+      const manifestData = await ghApi(info, `contents/${MANIFEST_URL.split('/').map(encodeURIComponent).join('/')}`);
+      const manifest = JSON.parse(base64ToUtf8(manifestData.content));
+      if (!Array.isArray(manifest.tracks)) manifest.tracks = [];
+      manifest.tracks.push({
+        title, artist: artist || '', album: '',
+        file: audioPath, cover: coverPath || '',
+        duration: Math.round(duration) || 0,
+      });
+      const newManifestB64 = utf8ToBase64(JSON.stringify(manifest, null, 2));
+      await ghPutFile(info, MANIFEST_URL, newManifestB64, `manifest.jsonに追加: ${title}`, manifestData.sha);
+    });
+
+    updateGhJob(job, 'done', '公開しました');
     showToast(`「${title}」を公開しました`);
-    state.ghAudioFile = null; state.ghCoverFile = null;
-    document.getElementById('ghTitleInput').value = '';
-    document.getElementById('ghArtistInput').value = '';
-    document.getElementById('ghAudioFileName').textContent = '';
-    document.getElementById('ghCoverFileName').textContent = '';
-    setTimeout(() => { closeModal('githubAddModal'); setGhStatus(''); }, 900);
     // GitHub PagesのCDN反映には時間がかかることがあるため、少し待ってから再同期を試みる
     setTimeout(async () => {
       try {
@@ -1992,9 +2068,8 @@ async function uploadTrackToGithub() {
       } catch (e) {}
     }, 4000);
   } catch (err) {
-    setGhStatus(err.message || 'エラーが発生しました');
-  } finally {
-    confirmBtn.disabled = false;
+    updateGhJob(job, 'error', err.message || 'エラーが発生しました');
+    showToast(`「${title}」の公開に失敗しました: ${err.message || '不明なエラー'}`);
   }
 }
 
@@ -2031,31 +2106,33 @@ async function pushTrackEditToGithub(track, updates, coverFile) {
     coverPath = newCoverPath;
   }
 
-  const manifestData = await ghApi(info, `contents/${MANIFEST_URL.split('/').map(encodeURIComponent).join('/')}`);
-  const manifest = JSON.parse(base64ToUtf8(manifestData.content));
-  if (!Array.isArray(manifest.tracks)) manifest.tracks = [];
-  const idx = manifest.tracks.findIndex(e => e && e.file === path);
-  if (idx > -1) {
-    manifest.tracks[idx].title = updates.title;
-    manifest.tracks[idx].artist = updates.artist;
-    manifest.tracks[idx].album = updates.album || '';
-    if (coverFile) {
-      manifest.tracks[idx].cover = coverPath;
-      // 同名ファイルを上書きした場合、GitHub Pages側のキャッシュにより
-      // しばらく古い画像が表示され続けることがあるため、バージョン番号を
-      // 進めてURLを変え、キャッシュを回避する
-      manifest.tracks[idx].v = (manifest.tracks[idx].v || 0) + 1;
+  const result = await withGhManifestLock(async () => {
+    const manifestData = await ghApi(info, `contents/${MANIFEST_URL.split('/').map(encodeURIComponent).join('/')}`);
+    const manifest = JSON.parse(base64ToUtf8(manifestData.content));
+    if (!Array.isArray(manifest.tracks)) manifest.tracks = [];
+    const idx = manifest.tracks.findIndex(e => e && e.file === path);
+    if (idx > -1) {
+      manifest.tracks[idx].title = updates.title;
+      manifest.tracks[idx].artist = updates.artist;
+      manifest.tracks[idx].album = updates.album || '';
+      if (coverFile) {
+        manifest.tracks[idx].cover = coverPath;
+        // 同名ファイルを上書きした場合、GitHub Pages側のキャッシュにより
+        // しばらく古い画像が表示され続けることがあるため、バージョン番号を
+        // 進めてURLを変え、キャッシュを回避する
+        manifest.tracks[idx].v = (manifest.tracks[idx].v || 0) + 1;
+      }
+    } else {
+      // まだmanifest.jsonに載っていない(自動フォルダ検出で表示されていただけの)曲を、
+      // ここで正式にmanifest.jsonへ登録する
+      manifest.tracks.push({
+        title: updates.title, artist: updates.artist, album: updates.album || '',
+        file: path, cover: coverPath, duration: Math.round(track.duration) || 0,
+      });
     }
-  } else {
-    // まだmanifest.jsonに載っていない(自動フォルダ検出で表示されていただけの)曲を、
-    // ここで正式にmanifest.jsonへ登録する
-    manifest.tracks.push({
-      title: updates.title, artist: updates.artist, album: updates.album || '',
-      file: path, cover: coverPath, duration: Math.round(track.duration) || 0,
-    });
-  }
-  const newManifestB64 = utf8ToBase64(JSON.stringify(manifest, null, 2));
-  await ghPutFile(info, MANIFEST_URL, newManifestB64, `曲情報を更新: ${updates.title}`, manifestData.sha);
+    const newManifestB64 = utf8ToBase64(JSON.stringify(manifest, null, 2));
+    await ghPutFile(info, MANIFEST_URL, newManifestB64, `曲情報を更新: ${updates.title}`, manifestData.sha);
+  });
   return { ok: true, path, coverPath };
 }
 
@@ -2072,16 +2149,18 @@ async function deleteTrackFromGithub(track) {
   if (!path) return { ok: false, reason: 'not-found' };
   const coverPath = ghPathFromTrackUrl(track.coverUrl);
 
-  const manifestData = await ghApi(info, `contents/${MANIFEST_URL.split('/').map(encodeURIComponent).join('/')}`);
-  const manifest = JSON.parse(base64ToUtf8(manifestData.content));
-  if (Array.isArray(manifest.tracks)) {
-    const before = manifest.tracks.length;
-    manifest.tracks = manifest.tracks.filter(e => !(e && e.file === path));
-    if (manifest.tracks.length !== before) {
-      const newManifestB64 = utf8ToBase64(JSON.stringify(manifest, null, 2));
-      await ghPutFile(info, MANIFEST_URL, newManifestB64, `曲を削除: ${track.title}`, manifestData.sha);
+  await withGhManifestLock(async () => {
+    const manifestData = await ghApi(info, `contents/${MANIFEST_URL.split('/').map(encodeURIComponent).join('/')}`);
+    const manifest = JSON.parse(base64ToUtf8(manifestData.content));
+    if (Array.isArray(manifest.tracks)) {
+      const before = manifest.tracks.length;
+      manifest.tracks = manifest.tracks.filter(e => !(e && e.file === path));
+      if (manifest.tracks.length !== before) {
+        const newManifestB64 = utf8ToBase64(JSON.stringify(manifest, null, 2));
+        await ghPutFile(info, MANIFEST_URL, newManifestB64, `曲を削除: ${track.title}`, manifestData.sha);
+      }
     }
-  }
+  });
   await ghDeleteFile(info, path, `音源を削除: ${track.title}`);
   if (coverPath) await ghDeleteFile(info, coverPath, `ジャケットを削除: ${track.title}`);
   return { ok: true };
@@ -2100,21 +2179,23 @@ async function pushLyricsToGithub(track, lyricsText) {
   if (!path) return { ok: false, reason: 'not-found' };
   const coverPath = ghPathFromTrackUrl(track.coverUrl) || '';
 
-  const manifestData = await ghApi(info, `contents/${MANIFEST_URL.split('/').map(encodeURIComponent).join('/')}`);
-  const manifest = JSON.parse(base64ToUtf8(manifestData.content));
-  if (!Array.isArray(manifest.tracks)) manifest.tracks = [];
-  const idx = manifest.tracks.findIndex(e => e && e.file === path);
-  if (idx > -1) {
-    manifest.tracks[idx].lyrics = lyricsText;
-  } else {
-    manifest.tracks.push({
-      title: track.title, artist: track.artist, album: track.album || '',
-      file: path, cover: coverPath, duration: Math.round(track.duration) || 0,
-      lyrics: lyricsText,
-    });
-  }
-  const newManifestB64 = utf8ToBase64(JSON.stringify(manifest, null, 2));
-  await ghPutFile(info, MANIFEST_URL, newManifestB64, `歌詞を更新: ${track.title}`, manifestData.sha);
+  await withGhManifestLock(async () => {
+    const manifestData = await ghApi(info, `contents/${MANIFEST_URL.split('/').map(encodeURIComponent).join('/')}`);
+    const manifest = JSON.parse(base64ToUtf8(manifestData.content));
+    if (!Array.isArray(manifest.tracks)) manifest.tracks = [];
+    const idx = manifest.tracks.findIndex(e => e && e.file === path);
+    if (idx > -1) {
+      manifest.tracks[idx].lyrics = lyricsText;
+    } else {
+      manifest.tracks.push({
+        title: track.title, artist: track.artist, album: track.album || '',
+        file: path, cover: coverPath, duration: Math.round(track.duration) || 0,
+        lyrics: lyricsText,
+      });
+    }
+    const newManifestB64 = utf8ToBase64(JSON.stringify(manifest, null, 2));
+    await ghPutFile(info, MANIFEST_URL, newManifestB64, `歌詞を更新: ${track.title}`, manifestData.sha);
+  });
   return { ok: true, path };
 }
 
@@ -2641,7 +2722,7 @@ function trackRowHTML(track, opts = {}) {
   const playingCls = track.id === state.currentTrackId ? 'playing' : '';
   return `
   <div class="item-row track-row" draggable="true" data-track-id="${track.id}">
-    <img class="row-cover" src="${cover}" alt="">
+    <img class="row-cover" src="${cover}" alt="" onerror="handleCoverError(this)">
     <div class="item-row-main">
       <div class="item-row-title ${playingCls}">${escapeHTML(track.title)}</div>
       <div class="item-row-sub">${escapeHTML(track.artist)}${track.album ? ' · ' + escapeHTML(track.album) : ''}</div>
@@ -2666,7 +2747,7 @@ function collectionRowHTML(col) {
   const cover = collectionCoverURL(col);
   return `
   <div class="item-row coll-row" data-open-coll="${col.id}">
-    <img class="row-cover" src="${cover}" alt="">
+    <img class="row-cover" src="${cover}" alt="" onerror="handleCoverError(this)">
     <div class="item-row-main">
       <div class="item-row-title">${escapeHTML(col.name)}</div>
       <div class="item-row-sub">プレイリスト · ${col.trackIds.length}曲</div>
@@ -2677,7 +2758,7 @@ function albumRowHTML(al) {
   const count = getAlbumTracks(al.id).length;
   return `
   <div class="item-row coll-row" data-open-album="${al.id}">
-    <img class="row-cover" src="${albumCoverURLFor(al)}" alt="">
+    <img class="row-cover" src="${albumCoverURLFor(al)}" alt="" onerror="handleCoverError(this)">
     <div class="item-row-main">
       <div class="item-row-title">${escapeHTML(al.name)}</div>
       <div class="item-row-sub">${al.artist ? escapeHTML(al.artist) + ' · ' : ''}${count}曲</div>
@@ -2688,7 +2769,7 @@ function albumRowHTML(al) {
 function gridCardHTML({ cover, title, sub, attr, round }) {
   return `
   <div class="grid-card" ${attr}>
-    <img class="grid-card-cover"${round ? ' style="border-radius:50%;"' : ''} src="${cover}" alt="">
+    <img class="grid-card-cover"${round ? ' style="border-radius:50%;"' : ''} src="${cover}" alt="" onerror="handleCoverError(this)">
     <div class="grid-card-title">${escapeHTML(title)}</div>
     <div class="grid-card-sub">${escapeHTML(sub)}</div>
   </div>`;
@@ -2706,7 +2787,7 @@ function renderHome() {
   state.collections.slice(0, 7).forEach(col => {
     quickHTML += `
       <button class="quick-card" data-open-coll="${col.id}">
-        <img src="${collectionCoverURL(col)}" alt="">
+        <img src="${collectionCoverURL(col)}" alt="" onerror="handleCoverError(this)">
         <div class="quick-card-label">${escapeHTML(col.name)}</div>
       </button>`;
   });
@@ -2730,7 +2811,7 @@ function hcardHTML(track) {
   return `
   <div class="hcard" data-play-track="${track.id}">
     <div class="hcard-cover-wrap">
-      <img src="${coverURLFor(track)}" alt="">
+      <img src="${coverURLFor(track)}" alt="" onerror="handleCoverError(this)">
       <div class="hcard-play-fab">${ICONS.play}</div>
     </div>
     <div class="hcard-title">${escapeHTML(track.title)}</div>
@@ -2835,7 +2916,7 @@ function renderLibrary() {
             })).join('')}</div>`
           : artists.map(([name, ids]) => `
             <div class="item-row round artist-row" data-open-artist="${encodeURIComponent(name)}">
-              <img class="row-cover" src="${artistIconURLFor(name)}" alt="">
+              <img class="row-cover" src="${artistIconURLFor(name)}" alt="" onerror="handleCoverError(this)">
               <div class="item-row-main">
                 <div class="item-row-title">${escapeHTML(name)}</div>
                 <div class="item-row-sub">${ids.length}曲</div>
@@ -2868,7 +2949,7 @@ function renderLibrary() {
           })).join('')}</div>`
         : items.map(col => `
           <div class="item-row coll-row" data-open-coll="${col.id}">
-            <img class="row-cover" src="${collectionCoverURL(col)}" alt="">
+            <img class="row-cover" src="${collectionCoverURL(col)}" alt="" onerror="handleCoverError(this)">
             <div class="item-row-main">
               <div class="item-row-title">${escapeHTML(col.name)}</div>
               <div class="item-row-sub">プレイリスト · ${col.trackIds.length}曲</div>
@@ -2917,7 +2998,7 @@ function renderDetail() {
   if (d.type === 'artist') {
     header.className = 'detail-header artist-header';
     header.innerHTML = `
-      <img src="${artistIconURLFor(d.name)}" alt="">
+      <img src="${artistIconURLFor(d.name)}" alt="" onerror="handleCoverError(this)">
       <div class="detail-name">${escapeHTML(d.name)}</div>
       <div class="detail-meta">${d.trackIds.length}曲</div>`;
   } else {
@@ -3006,7 +3087,7 @@ function renderQueueList() {
     const label = i === state.queueIndex ? '<span style="color:var(--accent);font-size:11px;font-weight:800;">再生中</span>' : '';
     return `
     <div class="item-row track-row" data-queue-jump="${i}">
-      <img class="row-cover" src="${coverURLFor(t)}" alt="">
+      <img class="row-cover" src="${coverURLFor(t)}" alt="" onerror="handleCoverError(this)">
       <div class="item-row-main">
         <div class="item-row-title ${i === state.queueIndex ? 'playing' : ''}">${escapeHTML(t.title)}</div>
         <div class="item-row-sub">${escapeHTML(t.artist)} ${label}</div>
@@ -3047,7 +3128,7 @@ function openTrackSheet(trackId) {
   if (!t) return;
   state.sheetTrackId = trackId;
   document.getElementById('sheetTrackInfo').innerHTML = `
-    <img src="${coverURLFor(t)}" alt="">
+    <img src="${coverURLFor(t)}" alt="" onerror="handleCoverError(this)">
     <div><div class="t">${escapeHTML(t.title)}</div><div class="a">${escapeHTML(t.artist)}</div></div>`;
   document.getElementById('sheetToggleFav').textContent = t.favorite ? 'お気に入りから削除' : 'お気に入りに追加';
   openSheet('trackSheet');
@@ -3074,7 +3155,7 @@ function renderPickList() {
       const checked = col.trackIds.includes(ctx.trackId);
       return `
       <div class="pick-item" data-pick-coll="${col.id}">
-        <img src="${collectionCoverURL(col)}" alt="">
+        <img src="${collectionCoverURL(col)}" alt="" onerror="handleCoverError(this)">
         <div class="pick-item-name">${escapeHTML(col.name)}</div>
         <div class="pick-item-check ${checked ? 'checked' : ''}"></div>
       </div>`;
@@ -3085,7 +3166,7 @@ function renderPickList() {
       const checked = d.trackIds.includes(t.id);
       return `
       <div class="pick-item" data-pick-track="${t.id}">
-        <img src="${coverURLFor(t)}" alt="">
+        <img src="${coverURLFor(t)}" alt="" onerror="handleCoverError(this)">
         <div class="pick-item-name">${escapeHTML(t.title)}<br><small style="color:var(--text-sub)">${escapeHTML(t.artist)}</small></div>
         <div class="pick-item-check ${checked ? 'checked' : ''}"></div>
       </div>`;
@@ -3721,7 +3802,7 @@ function bindStaticHandlers() {
       setGhToken(tokenInput.value.trim());
       updateGhTokenUI();
     }
-    uploadTrackToGithub();
+    enqueueGithubUpload();
   });
   document.getElementById('ghCancelBtn').addEventListener('click', () => { setGhStatus(''); });
 
