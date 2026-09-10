@@ -71,6 +71,14 @@
       "file": "songs/libido - Tatsuro.mp4",
       "cover": "songs/libido - Tatsuro.jpeg",
       "duration": 333
+    },
+    {
+      "title": "ミルフィーユ",
+      "artist": "転校星",
+      "album": "",
+      "file": "songs/ミルフィーユ.mp3",
+      "cover": "songs/ミルフィーユ.JPG",
+      "duration": 261
     }
   ]
 }
